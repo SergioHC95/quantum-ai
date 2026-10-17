@@ -27,7 +27,7 @@ StabilizerBench is organized into three benchmark tasks of increasing difficulty
 | `B2` | Circuit optimization | B2 tests whether an agent can reason about circuit equivalence to produce a more efficient implementation of the same stabilizer state. | Reduction in two-qubit gate count and depth |
 | `B3` | Fault-tolerant circuit generation | B3 tests whether an agent can improve the fault tolerance of a given circuit by inserting flag gadgets that detect uncorrectable error propagation. | Fault-tolerance score |
 
-B2 compares `(two_qubit_gates, volume, depth)` lexicographically. Two-qubit counts include all fixed-arity two-qubit gates; volume counts only the configured gate set.
+B2 compares `(two_qubit_gates, volume, depth)` lexicographically. Two-qubit counts include all fixed-arity two-qubit gates, while classical-controlled (feedback) operations act on a single quantum target and count as one-qubit; volume counts only the configured gate set.
 
 ## Structure
 
