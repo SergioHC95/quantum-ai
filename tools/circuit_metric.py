@@ -86,7 +86,7 @@ def compute_metrics(
 
         # Expand into per-gate operations (important for Stim "packed" instructions).
         ops: list[tuple[int, ...]] = []
-        if name in {"CX", "CZ", "SWAP"}:
+        if stim.gate_data(name).is_two_qubit_gate:
             if len(qubits) % 2 != 0:
                 raise ValueError(
                     f"Malformed {name} instruction with odd #qubit targets: {qubits}"
