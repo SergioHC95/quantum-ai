@@ -1,34 +1,23 @@
 import stim
 
 def parse_circuit_to_gate_list(circuit):
-    """Parse a Stim circuit into individual gates for fault injection."""
+    """Expand repeats and packed operations into physical fault locations."""
     gate_list = []
-    for instruction in circuit:
-        if instruction.name in ['CX', 'CY', 'CZ', 'CNOT']:
-            # Two-qubit gates: split into individual pairs
-            targets = instruction.targets_copy()
-            for i in range(0, len(targets), 2):
-                qubit_a = targets[i].value
-                qubit_b = targets[i+1].value
-                gate_list.append((instruction.name, [qubit_a, qubit_b]))
-        elif instruction.name in ['M', 'MX', 'MY', 'MZ', 'MR', 'MRX', 'MRY', 'MRZ']:
-            # Measurement: one entry per qubit
-            for tg in instruction.targets_copy():
-                if hasattr(tg, 'value'):
-                    gate_list.append((instruction.name, [tg.value]))
-        elif instruction.name in ['H', 'X', 'Y', 'Z', 'S', 'S_DAG', 'SQRT_X', 'SQRT_Y']:
-            # Single qubit gates
-            for tg in instruction.targets_copy():
-                if hasattr(tg, 'value'):
-                    gate_list.append((instruction.name, [tg.value]))
+    for instruction in circuit.flattened():
+        if instruction.name in {"QUBIT_COORDS", "SHIFT_COORDS", "DETECTOR", "OBSERVABLE_INCLUDE", "TICK"}:
+            continue
+        qubits = [target.value for target in instruction.targets_copy() if hasattr(target, "value")]
+        if not qubits:
+            continue
+        gate = stim.gate_data(instruction.name)
+        if gate.is_two_qubit_gate:
+            arity = 2
+        elif gate.is_single_qubit_gate:
+            arity = 1
         else:
-            # General case: extract all qubit targets
-            qubits = []
-            for tg in instruction.targets_copy():
-                if hasattr(tg, 'value'):
-                    qubits.append(tg.value)
-            if qubits:
-                gate_list.append((instruction.name, qubits))
+            arity = len(qubits)
+        for i in range(0, len(qubits), arity):
+            gate_list.append((instruction.name, qubits[i:i + arity]))
     return gate_list
 
 def inject_pauli(sim, pauli, qubit):
